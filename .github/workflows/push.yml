@@ -1,4 +1,4 @@
-name: "Prebuild vmagent-local base docker image"
+name: "Push"
 
 on:
   push:
@@ -13,9 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build image
-      run: cd src/agent/vmagent-local && ./setup.sh
-      env:
-        PREBUILD: true
+      run: cd server && docker build -t lovebox .
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u USERNAME --password-stdin
     - name: Push image
