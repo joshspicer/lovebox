@@ -3,31 +3,59 @@ const morgan = require('morgan');
 
 const port = process.env.PORT || 3000;
 const enableDurationInSeconds = process.env.ENABLE_DURATION_IN_SECONDS || 5;
+const pollingIntervalInSeconds = process.env.POLLING_INTERVAL_IN_SECONDS || 20;
 
 const users = [
     { id: "1", enable: 0, ack: 0 },
     { id: "2", enable: 0, ack: 0 }
 ];
 
+// To be sent on each poll
 const payloadConstants = {
     enableDurationInSeconds
 }
 
-const getRoute = (req, res, next) => {
+// To be sent once on startup
+const provisionConstants = {
+    pollingIntervalInSeconds,
+    ...payloadConstants
+}
+
+const provisionRoute = (req, res, next) => {
     const user = req.query.user;
     if (!user) {
-        res.status(400).json({ error: 'Missing user query param' })
+        console.log(`[-] Invalid provisioning request. Missing user query param.`);
+        res.status(400).json({ error: 'Invalid request' })
         return next()
     }
 
     const userObj = users.find(u => u.id === user)
     if (!userObj) {
-        res.status(400).json({ error: 'User not found' })
+        console.log(`[-] Invalid provisioning request. User '${user}' not found.`);
+        res.status(400).json({ error: 'Invalid request' })
+        return next()
+    }
+
+    console.log(`[!] User '${userObj.id}' is online!`);
+    res.json(provisionConstants);
+    next();
+}
+
+const getRoute = (req, res, next) => {
+    const user = req.query.user;
+    if (!user) {
+        res.status(400).json({ error: 'Invalid request' })
+        return next()
+    }
+
+    const userObj = users.find(u => u.id === user)
+    if (!userObj) {
+        res.status(400).json({ error: 'Invalid request' })
         return next()
     }
 
     if (userObj.enable === 1 && userObj.ack === 0) {
-        console.log(`[+] User '${userObj.id}' ack. Queuing disable in '${enableDurationInSeconds}' seconds.`);
+        console.log(`[+] User '${userObj.id}' ack. Queuing disable for '${enableDurationInSeconds}' seconds.`);
         userObj.ack = 1;
         setTimeout(() => {
             console.log(`[*] Disabling user ${userObj.id}`)
@@ -47,13 +75,13 @@ const getRoute = (req, res, next) => {
 const postRoute = (req, res, next) => {
     const user = req.query.user;
     if (!user) {
-        res.status(400).json({ error: 'missing user query param' })
+        res.status(400).json({ error: 'Invalid request' })
         return next()
     }
 
     const userObj = users.find(u => u.id === user)
     if (!userObj) {
-        res.status(400).json({ error: 'user not found' })
+        res.status(400).json({ error: 'Invalid request' })
         return next()
     }
 
@@ -69,6 +97,7 @@ const postRoute = (req, res, next) => {
 const app = express();
 app.get('/', getRoute);
 app.post('/', postRoute);
+app.get('/provision', provisionRoute);
 
 app.use(morgan('combined'));
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
