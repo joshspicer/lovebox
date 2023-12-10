@@ -1,0 +1,28 @@
+name: "Prebuild vmagent-local base docker image"
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build image
+      run: cd src/agent/vmagent-local && ./setup.sh
+      env:
+        PREBUILD: true
+    - name: Log in to registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u USERNAME --password-stdin
+    - name: Push image
+      run: |
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        BASE_IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/lovebox"
+        IMAGE_NAME_LATEST="$BASE_IMAGE_NAME:latest"
+        
+        docker tag lovebox:latest "$IMAGE_NAME_LATEST"
+        docker push "$IMAGE_NAME_LATEST"
