@@ -1,13 +1,10 @@
-#include <Arduino.h>
+#include "variables.h"
+
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include <Arduino_JSON.h>
 
-const char *ssid = "<TODO>";
-const char *password = "<TODO>";
-
-String serverPath = "http://<TODO>:3000/?user=1";
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
