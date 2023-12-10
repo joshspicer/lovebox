@@ -2,7 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const port = process.env.PORT || 3000;
-const enableDurationInSeconds = 5;
+const enableDurationInSeconds = process.env.ENABLE_DURATION_IN_SECONDS || 5;
 
 const users = [
     { id: "1", enable: 0 },
