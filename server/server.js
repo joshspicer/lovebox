@@ -9,6 +9,10 @@ const users = [
     { id: "2", enable: 0, ack: 0 }
 ];
 
+const payloadConstants = {
+    enableDurationInSeconds
+}
+
 const getRoute = (req, res, next) => {
     const user = req.query.user;
     if (!user) {
@@ -34,9 +38,9 @@ const getRoute = (req, res, next) => {
         console.log(`[no-op] User '${userObj.id}' is already active.`)
     } else {
         console.log(`[no-op] User '${userObj.id}' is not enabled.`);
-    }
+    }   
 
-    res.json({ enable: userObj.enable, user: user, ack: userObj.ack });
+    res.json({ enable: userObj.enable, user: user, ack: userObj.ack, ...payloadConstants });
     next();
 }
 
@@ -57,7 +61,7 @@ const postRoute = (req, res, next) => {
     userObj.enable = 1;
     userObj.ack = 0; // User needs to ack before we set timer for disabling
 
-    res.json({ enable: userObj.enable, user: user, ack: userObj.ack });
+    res.json({ enable: userObj.enable, user: user, ack: userObj.ack, ...payloadConstants });
     next()
 }
 
