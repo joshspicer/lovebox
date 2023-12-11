@@ -1,24 +1,18 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const port = process.env.PORT || 3000;
-const enableDurationInSeconds = process.env.ENABLE_DURATION_IN_SECONDS || 5;
-const pollingIntervalInSeconds = process.env.POLLING_INTERVAL_IN_SECONDS || 20;
+const port = parseInt(process.env.PORT) || 3000;
+const enableDurationInSeconds = parseInt(process.env.ENABLE_DURATION_IN_SECONDS) || 5;
+const pollingIntervalInSeconds = parseInt(process.env.POLLING_INTERVAL_IN_SECONDS) || 20;
 
 const users = [
     { id: "1", enable: 0, ack: 0 },
     { id: "2", enable: 0, ack: 0 }
 ];
 
-// To be sent on each poll
-const payloadConstants = {
-    enableDurationInSeconds
-}
-
-// To be sent once on startup
 const provisionConstants = {
     pollingIntervalInSeconds,
-    ...payloadConstants
+    enableDurationInSeconds,
 }
 
 const provisionRoute = (req, res, next) => {
@@ -68,7 +62,7 @@ const getRoute = (req, res, next) => {
         console.log(`[no-op] User '${userObj.id}' is not enabled.`);
     }   
 
-    res.json({ enable: userObj.enable, user: user, ack: userObj.ack, ...payloadConstants });
+    res.json({ enable: userObj.enable, user: user, ack: userObj.ack });
     next();
 }
 
@@ -89,7 +83,7 @@ const postRoute = (req, res, next) => {
     userObj.enable = 1;
     userObj.ack = 0; // User needs to ack before we set timer for disabling
 
-    res.json({ enable: userObj.enable, user: user, ack: userObj.ack, ...payloadConstants });
+    res.json({ enable: userObj.enable, user: user, ack: userObj.ack });
     next()
 }
 
