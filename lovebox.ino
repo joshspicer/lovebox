@@ -100,34 +100,34 @@ void blinkLEDForever()
 
 void loop()
 {
-    // Check for button press
-    // POSTs message to server, enabling the LED of the peer device :')
-    int buttonState = digitalRead(buttonPin);
-    if (buttonState == LOW && (millis() - lastTimeButton) > timerDebounceButton)
-    {
-        Serial.println("[!] Button press detected");
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            WiFiClient client;
-            HTTPClient http;
+    //// Check for button press
+    //// POSTs message to server, enabling the LED of the peer device :')
+    // int buttonState = digitalRead(buttonPin);
+    // if (buttonState == LOW && (millis() - lastTimeButton) > timerDebounceButton)
+    // {
+    //     Serial.println("[!] Button press detected");
+    //     if (WiFi.status() == WL_CONNECTED)
+    //     {
+    //         WiFiClient client;
+    //         HTTPClient http;
 
-            // Your Domain name with URL path or IP address with path
-            http.begin(client, postPeerAddress.c_str());
-            // http.setAuthorization("user", "password");
+    //         // Your Domain name with URL path or IP address with path
+    //         http.begin(client, postPeerAddress.c_str());
+    //         // http.setAuthorization("user", "password");
 
-            // Send HTTP POST request
-            int httpResponseCode = http.POST("from=" + me);
-            Serial.print("POST ");
-            Serial.println(httpResponseCode);
+    //         // Send HTTP POST request
+    //         int httpResponseCode = http.POST("from=" + me);
+    //         Serial.print("POST ");
+    //         Serial.println(httpResponseCode);
 
-            http.end();
-            lastTimeButton = millis();
-        }
-        else
-        {
-            Serial.println("[-] WiFi Disconnected");
-        }
-    }
+    //         http.end();
+    //         lastTimeButton = millis();
+    //     }
+    //     else
+    //     {
+    //         Serial.println("[-] WiFi Disconnected");
+    //     }
+    // }
 
     // Get state from server
     if ((millis() - lastPollTime) > pollingDelay)
