@@ -7,7 +7,8 @@ const enableDurationInSeconds = parseInt(process.env.ENABLE_DURATION_IN_SECONDS)
 
 const users = [
     { id: "1", enable: 0, ack: 0 },
-    { id: "2", enable: 0, ack: 0 }
+    { id: "2", enable: 0, ack: 0 },
+    { id: "3", enable: 0, ack: 0 }, // Test
 ];
 
 const provisionConstants = {
@@ -15,6 +16,7 @@ const provisionConstants = {
     enableDurationInSeconds,
 }
 
+console.log("Provisioning...")
 console.log(JSON.stringify(provisionConstants, undefined, 4));
 
 const provisionRoute = (req, res, next) => {
