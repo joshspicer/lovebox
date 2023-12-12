@@ -2,8 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 
 const port = parseInt(process.env.PORT) || 3000;
-const enableDurationInSeconds = parseInt(process.env.ENABLE_DURATION_IN_SECONDS) || 5;
-const pollingIntervalInSeconds = parseInt(process.env.POLLING_INTERVAL_IN_SECONDS) || 20;
+const pollingIntervalInSeconds = parseInt(process.env.POLLING_INTERVAL_IN_SECONDS) || 5;
+const enableDurationInSeconds = parseInt(process.env.ENABLE_DURATION_IN_SECONDS) || 10;
 
 const users = [
     { id: "1", enable: 0, ack: 0 },

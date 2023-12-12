@@ -4,12 +4,12 @@
 #include <WiFiClient.h>
 #include <Arduino_JSON.h>
 
-// 20 seconds
-unsigned long timerDelayLED = 20000;
-unsigned long lastTimeLED = 0;
+// Default: 5 seconds
+// Configured on startup by service
+unsigned long pollingDelay = 5000;
+unsigned long lastPollTime = 0;
 
-// 5 seconds
-unsigned long timerDelayButton = 5000;
+unsigned long timerDebounceButton = 5000;
 unsigned long lastTimeButton = 0;
 
 const int ledPin = 2;
@@ -33,8 +33,8 @@ void setup()
     Serial.print("Connected, IP address: ");
     Serial.println(WiFi.localIP());
 
-    pinMode(ledPin, OUTPUT);    // LED
-    pinMode(buttonPin, INPUT);  // Button
+    pinMode(ledPin, OUTPUT);   // LED
+    pinMode(buttonPin, INPUT); // Button
 
     // Provision
     if (!provision())
@@ -57,9 +57,34 @@ bool provision()
     Serial.print("PROVISION ");
     Serial.println(httpResponseCode);
 
+    if (httpResponseCode > 0)
+    {
+        String payload = http.getString();
+        JSONVar myObject = JSON.parse(payload);
+
+        Serial.print("Provisioning payload: ");
+        Serial.println(myObject);
+
+        if (JSON.typeof(myObject) == "undefined")
+        {
+            Serial.println("[-] Parsing input failed!");
+            return false;
+        }
+
+        int pollingIntervalInSeconds = myObject["pollingIntervalInSeconds"];
+        pollingDelay = pollingIntervalInSeconds * 1000;
+
+        Serial.print("pollingDelay: ");
+        Serial.println(pollingDelay);
+    }
+    else
+    {
+        Serial.println("[-] Parse error");
+    }
+
     http.end();
-    
-   return httpResponseCode == 200;
+
+    return httpResponseCode == 200;
 }
 
 void blinkLEDForever()
@@ -73,13 +98,12 @@ void blinkLEDForever()
     }
 }
 
-
 void loop()
 {
     // Check for button press
     // POSTs message to server, enabling the LED of the peer device :')
     int buttonState = digitalRead(buttonPin);
-    if (buttonState == LOW && (millis() - lastTimeButton) > timerDelayButton)
+    if (buttonState == LOW && (millis() - lastTimeButton) > timerDebounceButton)
     {
         Serial.println("[!] Button press detected");
         if (WiFi.status() == WL_CONNECTED)
@@ -92,7 +116,7 @@ void loop()
             // http.setAuthorization("user", "password");
 
             // Send HTTP POST request
-            int httpResponseCode = http.POST("from="+me);
+            int httpResponseCode = http.POST("from=" + me);
             Serial.print("POST ");
             Serial.println(httpResponseCode);
 
@@ -105,69 +129,69 @@ void loop()
         }
     }
 
-        // Get state from server
-        if ((millis() - lastTimeLED) > timerDelayLED)
+    // Get state from server
+    if ((millis() - lastPollTime) > pollingDelay)
+    {
+        Serial.println("[+] Polling server...");
+
+        // Check WiFi connection status
+        if (WiFi.status() == WL_CONNECTED)
         {
-            Serial.println("[+] Polling server...");
+            WiFiClient client;
+            HTTPClient http;
 
-            // Check WiFi connection status
-            if (WiFi.status() == WL_CONNECTED)
+            // Your Domain name with URL path or IP address with path
+            http.begin(client, getMeAddress.c_str());
+
+            // If you need Node-RED/server authentication, insert user and password below
+            // http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
+
+            // Send HTTP GET request
+            int httpResponseCode = http.GET();
+            Serial.print("GET ");
+            Serial.println(httpResponseCode);
+
+            if (httpResponseCode > 0)
             {
-                WiFiClient client;
-                HTTPClient http;
+                String payload = http.getString();
 
-                // Your Domain name with URL path or IP address with path
-                http.begin(client, getMeAddress.c_str());
+                // Parse payload as JSON (get 'enable' bool value)
+                JSONVar myObject = JSON.parse(payload);
 
-                // If you need Node-RED/server authentication, insert user and password below
-                // http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-
-                // Send HTTP GET request
-                int httpResponseCode = http.GET();
-                Serial.print("GET ");
-                Serial.println(httpResponseCode);
-
-                if (httpResponseCode > 0)
+                if (JSON.typeof(myObject) == "undefined")
                 {
-                    String payload = http.getString();
+                    Serial.println("[-] Parsing input failed!");
+                    return;
+                }
 
-                    // Parse payload as JSON (get 'enable' bool value)
-                    JSONVar myObject = JSON.parse(payload);
+                // Serial.println(myObject);
 
-                    if (JSON.typeof(myObject) == "undefined")
-                    {
-                        Serial.println("[-] Parsing input failed!");
-                        return;
-                    }
-
-                    // Serial.println(myObject);
-
-                    // Get the value of the "enable" element
-                    int enable = myObject["enable"];
-                    if (enable)
-                    {
-                        // Turn on LED
-                        digitalWrite(2, HIGH);
-                    }
-                    else
-                    {
-                        // Turn off LED
-                        digitalWrite(2, LOW);
-                    }
+                // Get the value of the "enable" element
+                int enable = myObject["enable"];
+                if (enable)
+                {
+                    // Turn on LED
+                    digitalWrite(2, HIGH);
                 }
                 else
                 {
-                    Serial.print("[-] Error code: ");
-                    Serial.println(httpResponseCode);
+                    // Turn off LED
+                    digitalWrite(2, LOW);
                 }
-                // Free
-                http.end();
             }
             else
             {
-                Serial.println("[-] WiFi Disconnected");
+                Serial.print("[-] Error code: ");
+                Serial.println(httpResponseCode);
             }
-
-            lastTimeLED = millis();
+            // Free
+            http.end();
         }
+        else
+        {
+            Serial.println("[-] WiFi Disconnected");
+        }
+
+        lastPollTime = millis();
     }
+}
