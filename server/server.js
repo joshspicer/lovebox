@@ -15,6 +15,8 @@ const provisionConstants = {
     enableDurationInSeconds,
 }
 
+console.log(JSON.stringify(provisionConstants, undefined, 4));
+
 const provisionRoute = (req, res, next) => {
     const user = req.query.user;
     if (!user) {
