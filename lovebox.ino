@@ -50,6 +50,8 @@ bool provision()
     HTTPClient http;
 
     http.begin(client, provisionMeAddress.c_str());
+
+    // Auth with something like Azure Functions
     // http.setAuthorization("user", "password");
 
     // Send HTTP POST request
@@ -100,7 +102,7 @@ void blinkLEDForever()
 
 void loop()
 {
-    //// Check for button press
+    //// Optional: Check for button press
     //// POSTs message to server, enabling the LED of the peer device :')
     // int buttonState = digitalRead(buttonPin);
     // if (buttonState == LOW && (millis() - lastTimeButton) > timerDebounceButton)
@@ -143,8 +145,8 @@ void loop()
             // Your Domain name with URL path or IP address with path
             http.begin(client, getMeAddress.c_str());
 
-            // If you need Node-RED/server authentication, insert user and password below
-            // http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
+            // // Auth with something like Azure Functions
+            // http.setAuthorization("username", "password");
 
             // Send HTTP GET request
             int httpResponseCode = http.GET();
@@ -163,8 +165,6 @@ void loop()
                     Serial.println("[-] Parsing input failed!");
                     return;
                 }
-
-                // Serial.println(myObject);
 
                 // Get the value of the "enable" element
                 int enable = myObject["enable"];
